@@ -187,9 +187,9 @@ body.active #snow {
 <canvas id="snow"></canvas>
 
 <div id="navbar">
-    <button class="nav-button" onclick="openDiscord()">Try Now</button>
-    <button class="nav-button" onclick="openDiscord()">Discord</button>
-    <button class="nav-button" onclick="openDiscord()">Configs</button>
+   <button class="nav-button" onclick="window.open('https://rb.gy/wr312c', '_blank')">Try Now</button>
+ <button class="nav-button" onclick="window.open('https://discord.gg/femboy', '_blank')">Discord</button>
+    <button class="nav-button" onclick="window.open('', '_blank')">Configs</button>
 </div>
 
 <div id="overlay" onclick="enterSite()">
@@ -197,11 +197,6 @@ body.active #snow {
 </div>
 
 <script>
-const discord = "https://discord.gg/QEkBfcaJXc";
-
-function openDiscord() {
-    window.open(discord, "_blank");
-}
 
 async function enterSite() {
     const video = document.getElementById("video");
