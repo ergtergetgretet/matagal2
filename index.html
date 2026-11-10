@@ -3,7 +3,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
 <title>Welcome</title>
 
 <style>
@@ -11,10 +12,12 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
     width: 100%;
+    min-height: 100%;
     height: 100%;
     background: #000;
     overflow: hidden;
@@ -24,11 +27,11 @@ html, body {
 #video {
     position: fixed;
     inset: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     height: 100dvh;
     object-fit: cover;
-    filter: blur(15px) brightness(0.5);
+    filter: blur(15px) brightness(.5);
     transform: scale(1.05);
     transition: 1.2s ease;
 }
@@ -52,52 +55,62 @@ html, body {
     justify-content: center;
     z-index: 5;
     cursor: pointer;
+    padding: 20px;
     transition: opacity 1s;
 }
 
 #enter {
     color: white;
-    font-size: 25px;
-    letter-spacing: 5px;
-    transition: 0.3s;
+    font-size: clamp(20px, 5vw, 25px);
+    letter-spacing: clamp(3px, 1vw, 5px);
+    transition: .3s;
+    user-select: none;
 }
 
-#enter:hover {
-    opacity: 0.5;
-    letter-spacing: 9px;
+@media (hover: hover) {
+    #enter:hover {
+        opacity: .5;
+        letter-spacing: 9px;
+    }
 }
 
 #navbar {
     position: fixed;
-    top: 25px;
-    left: 25px;
+    top: max(25px, env(safe-area-inset-top));
+    left: max(25px, env(safe-area-inset-left));
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     z-index: 4;
     opacity: 0;
     transform: translateY(-10px);
-    transition: 0.8s ease;
+    transition: .8s ease;
     pointer-events: none;
 }
 
 .nav-button {
-    background: rgba(0,0,0,0.35);
+    background: rgba(0,0,0,.35);
     color: white;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,.2);
     padding: 11px 19px;
+    min-height: 40px;
     font-size: 12px;
     letter-spacing: 1px;
     cursor: pointer;
     border-radius: 5px;
     backdrop-filter: blur(10px);
-    transition: 0.3s;
+    -webkit-backdrop-filter: blur(10px);
+    transition: .3s;
+    white-space: nowrap;
 }
 
-.nav-button:hover {
-    background: white;
-    color: black;
-    border-color: white;
-    transform: translateY(-2px);
+@media (hover: hover) {
+    .nav-button:hover {
+        background: white;
+        color: black;
+        border-color: white;
+        transform: translateY(-2px);
+    }
 }
 
 body.active #video {
@@ -119,12 +132,55 @@ body.active #navbar {
 body.active #snow {
     opacity: 1;
 }
+
+/* Mobile */
+@media (max-width: 600px) {
+    #navbar {
+        top: max(15px, env(safe-area-inset-top));
+        left: 50%;
+        transform: translate(-50%, -10px);
+        width: calc(100% - 30px);
+        justify-content: center;
+        gap: 8px;
+    }
+
+    body.active #navbar {
+        transform: translate(-50%, 0);
+    }
+
+    .nav-button {
+        flex: 1;
+        min-width: 0;
+        padding: 12px 8px;
+        min-height: 44px;
+        font-size: 11px;
+        letter-spacing: .5px;
+    }
+
+    #enter {
+        font-size: 23px;
+        letter-spacing: 4px;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 350px) {
+    #navbar {
+        gap: 5px;
+        width: calc(100% - 20px);
+    }
+
+    .nav-button {
+        padding: 10px 5px;
+        font-size: 10px;
+    }
+}
 </style>
 </head>
 
 <body>
 
-<video id="video" loop playsinline preload="auto">
+<video id="video" loop playsinline webkit-playsinline preload="auto">
     <source src="https://raw.githubusercontent.com/ergtergetgretet/matagal2/main/lol.mp4" type="video/mp4">
 </video>
 
@@ -165,33 +221,54 @@ const ctx = canvas.getContext("2d");
 
 let flakes = [];
 let snowRunning = false;
+let animationId;
 
 function resizeSnow() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    canvas.width = Math.round(window.innerWidth * dpr);
+    canvas.height = Math.round(window.innerHeight * dpr);
+
+    canvas.style.width = window.innerWidth + "px";
+    canvas.style.height = window.innerHeight + "px";
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    if (snowRunning) {
+        flakes.forEach(f => {
+            f.x = Math.random() * window.innerWidth;
+            f.y = Math.random() * window.innerHeight;
+        });
+    }
 }
 
 window.addEventListener("resize", resizeSnow);
+window.addEventListener("orientationchange", resizeSnow);
+
 resizeSnow();
 
 function startSnow() {
     if (snowRunning) return;
+
     snowRunning = true;
 
-    flakes = Array.from({length: 150}, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
+    const mobile = window.innerWidth <= 600;
+    const amount = mobile ? 65 : 150;
+
+    flakes = Array.from({length: amount}, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
         size: Math.random() * 3 + 1,
-        speed: Math.random() * 1.5 + 0.5,
-        drift: Math.random() * 1 - 0.5,
-        opacity: Math.random() * 0.7 + 0.3
+        speed: Math.random() * 1.5 + .5,
+        drift: Math.random() * 1 - .5,
+        opacity: Math.random() * .7 + .3
     }));
 
     animateSnow();
 }
 
 function animateSnow() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
     flakes.forEach(f => {
         ctx.beginPath();
@@ -202,16 +279,16 @@ function animateSnow() {
         f.y += f.speed;
         f.x += f.drift;
 
-        if (f.y > canvas.height) {
+        if (f.y > window.innerHeight) {
             f.y = -5;
-            f.x = Math.random() * canvas.width;
+            f.x = Math.random() * window.innerWidth;
         }
 
-        if (f.x > canvas.width) f.x = 0;
-        if (f.x < 0) f.x = canvas.width;
+        if (f.x > window.innerWidth) f.x = 0;
+        if (f.x < 0) f.x = window.innerWidth;
     });
 
-    requestAnimationFrame(animateSnow);
+    animationId = requestAnimationFrame(animateSnow);
 }
 </script>
 
